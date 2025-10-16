@@ -3,39 +3,40 @@ from pathlib import Path
 import sys
 import pandas as pd
 
-DATA_START_ROW = 1
-PAES_RANGE = "J:Q"
-PDT_RANGE = "R:X"
+DATA_START_ROW  = 1
+PAES_RANGE      = "J:Q"
+PDT_RANGE       = "R:X"
 
 
 def columnLetterToIndex(letter):
-    text = letter.strip().upper()
-    value = 0
+    text    = letter.strip().upper()
+    value   = 0
     for char in text:
         value = value * 26 + (ord(char) - 64)
     return value - 1
 
 
 def parseColumnRange(rangeText):
-    parts = rangeText.split(":")
+    parts       = rangeText.split(":")
     startLetter = parts[0].strip()
-    endLetter = parts[1].strip()
-    startIndex = columnLetterToIndex(startLetter)
-    endIndex = columnLetterToIndex(endLetter)
+    endLetter   = parts[1].strip()
+    startIndex  = columnLetterToIndex(startLetter)
+    endIndex    = columnLetterToIndex(endLetter)
     if startIndex > endIndex:
-        temp = startIndex
-        startIndex = endIndex
-        endIndex = temp
+        temp        = startIndex
+        startIndex  = endIndex
+        endIndex    = temp
     return startIndex, endIndex
 
 
 def parseCliArgs():
-    parser = argparse.ArgumentParser(add_help=False)
+    parser      = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-i", "--input", required=True)
-    args = parser.parse_args()
-    inputPath = Path(args.input)
-    if not inputPath.exists():
-        sys.exit(1)
+    args        = parser.parse_args()
+    inputPath   = Path(args.input)
+
+    if not inputPath.exists() : sys.exit(1)
+    
     return inputPath
 
 
@@ -48,26 +49,23 @@ def getDataRows(dataframe, dataStartRow):
 
 def normalizeCell(cellValue):
     isMissing = pd.isna(cellValue)
-    if isMissing:
-        return None
+    if isMissing : return None
 
-    textValue = str(cellValue)
-    trimmedValue = textValue.strip()
-
-    isEmptyAfterTrim = trimmedValue == ""
-    if isEmptyAfterTrim:
-        return None
+    textValue           = str(cellValue)
+    trimmedValue        = textValue.strip()
+    isEmptyAfterTrim    = trimmedValue == ""
+    if isEmptyAfterTrim : return None
 
     return trimmedValue
 
 
 def buildStudentKey(row, paesStart, paesEnd, pdtStart, pdtEnd):
-    values = []
-    colIndex = paesStart
+    values      = []
+    colIndex    = paesStart
     while colIndex <= paesEnd:
         values.append(normalizeCell(row[colIndex]))
         colIndex += 1
-    colIndex = pdtStart
+    colIndex    = pdtStart
     while colIndex <= pdtEnd:
         values.append(normalizeCell(row[colIndex]))
         colIndex += 1
@@ -77,25 +75,23 @@ def buildStudentKey(row, paesStart, paesEnd, pdtStart, pdtEnd):
         if v is not None:
             allEmpty = False
             break
-    if allEmpty:
-        return None
+    if allEmpty : return None
 
     return tuple(values)
 
 
 def assignStudentIds(dataRows, paesRange, pdtRange):
-    data = dataRows.copy()
-    paesStart, paesEnd = parseColumnRange(paesRange)
-    pdtStart, pdtEnd = parseColumnRange(pdtRange)
+    data                = dataRows.copy()
+    paesStart, paesEnd  = parseColumnRange(paesRange)
+    pdtStart, pdtEnd    = parseColumnRange(pdtRange)
 
-    keyToId = {}
-    nextId = 1
-
-    studentIds = []
-    noneFlags = []
-    originalIndex = []
-
-    idx = 0
+    keyToId         = {}
+    nextId          = 1
+    studentIds      = []
+    noneFlags       = []
+    originalIndex   = []
+    idx             = 0
+    
     for _, row in data.iterrows():
         key = buildStudentKey(row, paesStart, paesEnd, pdtStart, pdtEnd)
         if key is None:
@@ -112,9 +108,9 @@ def assignStudentIds(dataRows, paesRange, pdtRange):
         originalIndex.append(idx)
         idx += 1
 
-    data["studentId"] = studentIds
-    data["noScores"] = noneFlags
-    data["originalIndex"] = originalIndex
+    data["studentId"]       = studentIds
+    data["noScores"]        = noneFlags
+    data["originalIndex"]   = originalIndex
 
     return data
 
@@ -184,7 +180,7 @@ def computeSimpleCounts(dataWithIds):
 
 def printSummary(inputPath, outputPath, counts):
     total, withScores, withoutScores, numStudents = counts
-    print("----- RESUMEN AGRUPACIÓN POR ESTUDIANTE -----")
+    print("----- RESULTADO DE LA AGRUPACIÓN POR ESTUDIANTE -----")
     print(f"    Entrada          : {inputPath.name}")
     print(f"    Salida           : {outputPath.name}")
     print(f"    Filas totales    : {total}")
@@ -192,15 +188,15 @@ def printSummary(inputPath, outputPath, counts):
 
 
 def processFile(inputPath):
-    dataframe = pd.read_csv(inputPath, header=None)
-    dataRows = getDataRows(dataframe, DATA_START_ROW)
-    dataWithIds = assignStudentIds(dataRows, PAES_RANGE, PDT_RANGE)
-    dataOrdered = orderByStudentId(dataWithIds)
+    dataframe           = pd.read_csv(inputPath, header=None)
+    dataRows            = getDataRows(dataframe, DATA_START_ROW)
+    dataWithIds         = assignStudentIds(dataRows, PAES_RANGE, PDT_RANGE)
+    dataOrdered         = orderByStudentId(dataWithIds)
     originalColumnCount = dataframe.shape[1]
-    dataForOutput = prependStudentIdColumn(dataOrdered, originalColumnCount)
-    outputPath = inputPath.with_name(f"{inputPath.stem}_students.csv")
+    dataForOutput       = prependStudentIdColumn(dataOrdered, originalColumnCount)
+    outputPath          = Path("../data/3.fica_bimestres_grouped_by_student.csv")
     dataForOutput.to_csv(outputPath, index=False, header=False)
-    counts = computeSimpleCounts(dataWithIds)
+    counts              = computeSimpleCounts(dataWithIds)
     printSummary(inputPath, outputPath, counts)
 
 
