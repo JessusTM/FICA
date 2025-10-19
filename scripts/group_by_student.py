@@ -6,7 +6,15 @@ import pandas as pd
 DATA_START_ROW  = 1
 PAES_RANGE      = "J:Q"
 PDT_RANGE       = "R:X"
-
+HEADERS         = [
+    "id_alumno","año","semestre","bimestre","codigo_asignatura","modulo",
+    "nombre_asignatura","nota_final","estado_final","diagnostico_matematica",
+    "paes_comprension_lectora","paes_m1","paes_m2","paes_historia","paes_ciencias",
+    "paes_nem","paes_ranking","paes_promedio_m1_comprension_lectora",
+    "pdt_lenguaje","pdt_matematicas","pdt_historia","pdt_ciencias",
+    "pdt_nem","pdt_ranking","pdt_promedio_matematicas_lenguaje",
+    "año_ingreso","tipo_ingreso","id_registro"
+]
 
 def columnLetterToIndex(letter):
     text    = letter.strip().upper()
@@ -188,15 +196,16 @@ def printSummary(inputPath, outputPath, counts):
 
 
 def processFile(inputPath):
-    dataframe           = pd.read_csv(inputPath, header=None)
-    dataRows            = getDataRows(dataframe, DATA_START_ROW)
-    dataWithIds         = assignStudentIds(dataRows, PAES_RANGE, PDT_RANGE)
-    dataOrdered         = orderByStudentId(dataWithIds)
-    originalColumnCount = dataframe.shape[1]
-    dataForOutput       = prependStudentIdColumn(dataOrdered, originalColumnCount)
-    outputPath          = Path("../data/3.fica_bimestres_grouped_by_student.csv")
-    dataForOutput.to_csv(outputPath, index=False, header=False)
-    counts              = computeSimpleCounts(dataWithIds)
+    dataframe               = pd.read_csv(inputPath, header=None)
+    dataRows                = getDataRows(dataframe, DATA_START_ROW)
+    dataWithIds             = assignStudentIds(dataRows, PAES_RANGE, PDT_RANGE)
+    dataOrdered             = orderByStudentId(dataWithIds)
+    originalColumnCount     = dataframe.shape[1]
+    dataForOutput           = prependStudentIdColumn(dataOrdered, originalColumnCount)
+    dataForOutput.columns   = HEADERS
+    outputPath              = Path("../data/3.fica_bimestres_grouped_by_student.csv")
+    dataForOutput.to_csv(outputPath, index=False, header=True)
+    counts                  = computeSimpleCounts(dataWithIds)
     printSummary(inputPath, outputPath, counts)
 
 
