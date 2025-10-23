@@ -36,12 +36,24 @@ source .venv/bin/activate      # Linux / Mac
 pip install -r requirements.txt
 ```
 
+#### Crear base de datos en PostgreSQL (Linux)
+
+```bash
+sudo systemctl status postgresql              # Verificar que el servicio esté activo
+sudo psql -U postgres -f database.sql         # Crear base de datos y tablas
+```
+
+> **Nota:** En caso de que se utilice un usuario distinto al administrador **postgres**, será necesario otorgarle los permisos correspondientes haciendo uso del script `grant_permissions.sql`. De no realizar esta última acción el script `populate_database.py` fallará al interactuar con la base de datos y las tablas no serán creadas. Para evitar esto reemplaza tu nombre del usuario dentro del archivo `grant_permissions.sql` y luego ejecuta el siguiente comando en la terminal:
+
+```bash 
+sudo psql -U postgres -f grant_permissions.sql   # Otorga permisos al usuario
+```
+
 ## Estructura del proyecto
 
 ```bash
 FICA/
 ├── data/                                 # Carpeta para colocar el CSV original
-│   └── .gitkeep                          # Marcador para mantener la carpeta vacía en git
 ├── database.sql                          # Crear tablas y constrains para la base de datos
 ├── grant_permissions.sql                 # Permisos de usuario para la base de datos 
 ├── README.md
@@ -56,15 +68,13 @@ FICA/
 
 ## Flujo de ejecución de scripts
 
-Antes de ejecutar el flujo coloca una copia del archivo original `fica-bimestres.csv` dentro de la carpeta `data/`.
+Antes de ejecutar el proceso ETL coloca una copia del archivo original con el nombre`fica-bimestres.csv` dentro de la carpeta `data/`.
 
-El repositorio ahora incluye el archivo `main.py`, el cual ejecuta de manera secuencial cada uno de los scripts ubicados en `scripts/`. Para iniciar el proceso completo basta con ejecutar:
-
+Después, ejecuta el archivo`main.py` de la siguiente manera:
 ```bash
-python main.py
+python3 main.py
 ```
-
-Durante la ejecución se generan y consumen los siguientes archivos:
+Este script ejecutará de manera secuencial cada uno de los scripts ubicados en el directorio `scripts/`. Durante la ejecución se generan y consumen los siguientes archivos:
 
 1. **`delete_algebra_classes.py`**
    - **Entrada:** `data/fica-bimestres.csv`
@@ -85,17 +95,5 @@ Durante la ejecución se generan y consumen los siguientes archivos:
    - **Entrada:** `data/3.fica_bimestres_grouped_by_student.csv`
    - **Función:** Guarda los datos ya procesados en la base de datos de acorde a lo definido en el archivo `database.sql`.
 
-> **IMPORTANTE:** Antes de ejecutar `populate_database.py` (paso N°4), se debe verificar de haber configurado correctamente las credenciales de usuario de la base de datos en `scripts/db_config.py`.
-
-## Base de datos
-
-El archivo `database.sql` contiene las instrucciones para crear la base de datos y las tablas necesarias. Para ejecutarlo se utiliza el siguiente comando en la terminal:
-
-```bash 
-sudo psql -U postgres -f database.sql
-```
-
-> **Nota:** En caso de que se utilice un usuario distinto al administrador **postgres**, será necesario otorgarle los permisos correspondientes haciendo uso del script `grant_permissions.sql`. De no realizar esta última acción el script `populate_database.py` podría fallar al interactuar con la base de datos. Para ejecutarlo es necesario reemplazar el nombre del usuario dentro del archivo `grant_permissions.sql` y luego ejecutar el siguiente comando en la terminal:
-
-```bash
-sudo psql -U postgres -f grant_permissions.sql
+## Modelo relacional base de datos
+![alt text](https://github.com/JessusTM/FICA/blob/main/modelo_relacional.png?raw=true)
