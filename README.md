@@ -40,11 +40,8 @@ pip install -r requirements.txt
 
 ```bash
 FICA/
-├── data/
-│   ├── fica-bimestres.csv                # CSV original sin limpiar
-│   ├── 1.fica-bimestres-calculus.csv     
-│   ├── 2.fica-bimestres_grouped_by_test.csv
-│   └── 3.fica-bimestres_grouped_by_student.csv
+├── data/                                 # Carpeta para colocar el CSV original
+│   └── .gitkeep                          # Marcador para mantener la carpeta vacía en git
 ├── database.sql                          # Crear tablas y constrains para la base de datos
 ├── grant_permissions.sql                 # Permisos de usuario para la base de datos 
 ├── README.md
@@ -59,30 +56,36 @@ FICA/
 
 ## Flujo de ejecución de scripts
 
-Cada script del proyecto debe ejecutarse de manera secuencial, ya que cada uno genera el archivo de entrada necesario para el siguiente paso.  
-El orden correcto es el siguiente:
+Antes de ejecutar el flujo coloca una copia del archivo original `fica-bimestres.csv` dentro de la carpeta `data/`.
 
-1. **`delete_algebra_classes.py`**  
-   - **Entrada:** `data/fica-bimestres.csv`  
-   - **Salida:** `data/1.fica-bimestres-calculus.csv`  
+El repositorio ahora incluye el archivo `main.py`, el cual ejecuta de manera secuencial cada uno de los scripts ubicados en `scripts/`. Para iniciar el proceso completo basta con ejecutar:
+
+```bash
+python main.py
+```
+
+Durante la ejecución se generan y consumen los siguientes archivos:
+
+1. **`delete_algebra_classes.py`**
+   - **Entrada:** `data/fica-bimestres.csv`
+   - **Salida:** `data/1.fica-bimestres-calculus.csv`
    - **Función:** Elimina los ramos de la línea de Álgebra (Introducción al Álgebra, Álgebra, Matemática para la Computación I y II).
 
-2. **`group_by_test.py`**  
-   - **Entrada:** `data/1.fica-bimestres-calculus.csv`  
-   - **Salida:** `data/2.fica-bimestres_grouped_by_test.csv`  
+2. **`group_by_test.py`**
+   - **Entrada:** `data/1.fica-bimestres-calculus.csv`
+   - **Salida:** `data/2.fica_bimestres_grouped_by_test.csv`
    - **Función:** Agrupa las filas según el tipo de prueba rendida por el estudiante (**PAES / PDT**).
 
-3. **`group_by_student.py`**  
-   - **Entrada:** `data/2.fica-bimestres_grouped_by_test.csv`  
-   - **Salida:** `data/3.fica-bimestres_grouped_by_student.csv`  
+3. **`group_by_student.py`**
+   - **Entrada:** `data/2.fica_bimestres_grouped_by_test.csv`
+   - **Salida:** `data/3.fica_bimestres_grouped_by_student.csv`
    - **Función:** Asigna identificadores únicos a los estudiantes mediante coincidencias entre columnas de resultados, permitiendo vincular registros de un mismo estudiante.
 
-4. **`populate_database.py`**  
-   - **Entrada:** `data/3.fica-bimestres_grouped_by_student.csv`  
+4. **`populate_database.py`**
+   - **Entrada:** `data/3.fica_bimestres_grouped_by_student.csv`
    - **Función:** Guarda los datos ya procesados en la base de datos de acorde a lo definido en el archivo `database.sql`.
-> **Nota:** Todos los scripts deben ejecutarse dentro de la carpeta `scripts/`, ya que utilizan rutas relativas hacia la carpeta `data/`.
 
-> **IMPORTANTE:** Antes de ejecutar `populate_database.py` en el paso N°4, se debe verificar de haber configurado correctamente las credenciales de usuario de la base de datos en `scripts/db_config.py`.
+> **IMPORTANTE:** Antes de ejecutar `populate_database.py` (paso N°4), se debe verificar de haber configurado correctamente las credenciales de usuario de la base de datos en `scripts/db_config.py`.
 
 ## Base de datos
 
