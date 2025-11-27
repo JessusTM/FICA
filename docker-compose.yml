@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: ./fica-backend 
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./fica-backend:/app
+  frontend:
+    build: ./fica-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./fica-frontend:/app
+    depends_on:
+      - backend
