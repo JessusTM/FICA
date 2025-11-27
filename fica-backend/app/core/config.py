@@ -1,0 +1,10 @@
+from pathlib import Path
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+
+load_dotenv()
+
+class Settings(BaseSettings):
+    APP_NAME            : str   = "FICA"
+
+settings = Settings()
