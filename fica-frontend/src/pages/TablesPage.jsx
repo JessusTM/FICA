@@ -7,10 +7,10 @@ function TablesPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            Data Explorer
+            Explorador de tablas
           </h1>
           <p className="text-gray-600 mb-8">
-            Explora y busca en las tablas de la base de datos
+            Explora y realiza búsquedas en la base de datos
           </p>
 
           <TableExplorer />

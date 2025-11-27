@@ -7,37 +7,37 @@ import DataTable from './DataTable';
 const tableMetadata = {
     estudiantes: {
       name: 'Estudiantes',
-      icon: '👨‍🎓',
+      icon: '/lista-de-tablas.png',
       description: 'Información de estudiantes y sus puntajes',
     },
     semestres: {
       name: 'Semestres',
-      icon: '📅',
-      description: 'Periodos académicos',
+      icon: '/lista-de-tablas.png',
+      description: 'Periodos académicos semestrales',
     },
     bimestres: {
       name: 'Bimestres',
-      icon: '📆',
-      description: 'Periodos bimestrales',
+      icon: '/lista-de-tablas.png',
+      description: 'Periodos académicos bimestrales',
     },
     asignaturas: {
       name: 'Asignaturas',
-      icon: '📚',
-      description: 'Cursos y materias',
+      icon: '/lista-de-tablas.png',
+      description: 'Información de cursos y módulos',
     },
     rendimiento_ramo: {
-      name: 'Rendimiento por Ramo',
-      icon: '📊',
-      description: 'Performance de estudiantes por asignatura',
+      name: 'Rendimiento por ramo',
+      icon: '/lista-de-tablas.png',
+      description: 'Rendimiento de estudiantes por asignatura',
     },
     paes: {
       name: 'PAES',
-      icon: '📝',
+      icon: '/lista-de-tablas.png',
       description: 'Resultados de prueba PAES',
     },
     pdt: {
       name: 'PDT',
-      icon: '📝',
+      icon: '/lista-de-tablas.png',
       description: 'Resultados de prueba PDT',
     },
 };
@@ -129,13 +129,13 @@ function TableExplorer() {
       {/* Table Selection */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">
-          Selecciona una Tabla
+          Selecciona una tabla
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {tables.map((tableName) => {
             const metadata = tableMetadata[tableName] || {
               name: tableName,
-              icon: '📋',
+              icon: '/lista-de-tablas.png',
               description: '',
             };
 
@@ -149,7 +149,13 @@ function TableExplorer() {
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                 }`}
               >
-                <div className="text-3xl mb-2">{metadata.icon}</div>
+                <div className="mb-2">
+                  <img
+                    src={metadata.icon}
+                    alt={metadata.name}
+                    className="w-12 h-12"
+                  />
+                </div>
                 <h3 className="font-semibold text-gray-800 text-sm">
                   {metadata.name}
                 </h3>
@@ -196,7 +202,13 @@ function TableExplorer() {
 
       {!selectedTable && (
         <div className="bg-white rounded-lg shadow-md p-12 text-center">
-          <div className="text-6xl mb-4">📊</div>
+          <div className="mb-4 flex justify-center">
+            <img
+              src="/lista-de-tablas.png"
+              alt="Tablas"
+              className="w-24 h-24"
+            />
+          </div>
           <p className="text-gray-600 text-lg">
             Selecciona una tabla para comenzar
           </p>
