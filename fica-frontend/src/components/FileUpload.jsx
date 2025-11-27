@@ -140,7 +140,13 @@ function FileUpload() {
 
         {!file ? (
           <>
-            <div className="text-5xl mb-4">📁</div>
+              <div className="mb-4 flex justify-center">
+                  <img
+                      src="/subir.png"
+                      alt="Upload"
+                      className="w-16 h-16"
+                  />
+              </div>
             <p className="text-lg text-gray-700 mb-2">
               Arrastra y suelta tu archivo aquí
             </p>
@@ -153,7 +159,13 @@ function FileUpload() {
           </>
         ) : (
           <div className="space-y-4">
-            <div className="text-5xl">✅</div>
+              <div className="mb-4 flex justify-center">
+                  <img
+                      src="/archivo-excel.png"
+                      alt="Upload"
+                      className="w-16 h-16"
+                  />
+              </div>
             <div>
               <p className="text-lg font-medium text-gray-800">
                 {file.name}
@@ -190,7 +202,7 @@ function FileUpload() {
             disabled={uploadStatus === 'uploading'}
             className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {uploadStatus === 'uploading' ? 'Subiendo...' : 'Subir Archivo'}
+            {uploadStatus === 'uploading' ? 'Subiendo...' : 'Subir archivo'}
           </button>
         </div>
       )}
@@ -199,20 +211,20 @@ function FileUpload() {
         <div className="mt-6 space-y-4">
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-green-700 font-medium">
-              ✓ Archivo subido exitosamente
+              Archivo subido exitosamente
             </p>
           </div>
           <button
             onClick={handleStartETL}
             className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors"
           >
-            Iniciar Proceso ETL
+            Iniciar proceso ETL
           </button>
           <button
             onClick={resetUpload}
             className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors"
           >
-            Subir Otro Archivo
+            Subir otro archivo
           </button>
         </div>
       )}
