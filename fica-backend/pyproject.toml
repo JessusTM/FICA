@@ -1,0 +1,12 @@
+[project]
+name          = "fica-backend"
+version       = "0.1.0"
+description   = "Backend service for FICA application"
+dependencies  = [
+  "pydantic_settings",
+  "fastapi[standard]",
+  "numpy", 
+  "pandas",
+  "sqlalchemy",
+  "dotenv"
+]
