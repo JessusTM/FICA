@@ -1,10 +1,12 @@
-from pathlib import Path
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
 load_dotenv()
 
-class Settings(BaseSettings):
-    APP_NAME            : str   = "FICA"
+class Config(BaseSettings):
+    APP_NAME    : str = "fica-backend"
+    DB_URL      : str = ""
+    DB_PASSWORD : str = ""
+    DB_NAME     : str = ""
 
-settings = Settings()
+config = Config()

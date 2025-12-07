@@ -1,4 +1,0 @@
-pydantic_settings
-fastapi[standard]
-numpy
-pandas
