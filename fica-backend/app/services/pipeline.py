@@ -3,10 +3,10 @@ from typing import Any, Dict, Tuple, Optional
 import pandas as pd
 from sqlalchemy.engine import Engine
 
-from app.services.delete_algebra_classes import filter_out_algebra
-from app.services.group_by_test import group_by_test
-from app.services.group_by_student import group_by_student
-from app.services.populate_database import populate_all
+from app.services.etl.delete_algebra_classes import filter_out_algebra
+from app.services.etl.group_by_test import group_by_test
+from app.services.etl.group_by_student import group_by_student
+from app.services.etl.populate_database import populate_all
 from app.core.database.db import engine as default_engine, get_raw_connection
 
 def run_pipeline_on_dataframe(
