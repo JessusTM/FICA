@@ -1,7 +1,6 @@
-.venv/
-build/
-
+.git
 __pycache__/
 *.pyc
-.dist/
+build/
+dist/
 .env
