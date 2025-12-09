@@ -1,8 +1,11 @@
 import axios from 'axios';
 
 // API base URL configuration
-// In production, set REACT_APP_API_URL environment variable
+// Siempre usa localhost:8000 porque el navegador accede desde fuera de Docker
+// La variable REACT_APP_API_URL solo se usa si está explícitamente definida
 const API_BASE_URL = 'http://localhost:8000/api';
+
+console.log('API Base URL:', API_BASE_URL); // Para debugging
 
 // Create axios instance with default config
 const apiClient = axios.create({
