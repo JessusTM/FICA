@@ -9,6 +9,9 @@ services:
       POSTGRES_DB: fica_db
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./fica-backend/app/core/database/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   backend:
     build: ./fica-backend
@@ -28,10 +31,17 @@ services:
     container_name: fica-frontend
     restart: unless-stopped
     ports:
-      - "5173:5173"
+      - "5173:3000"
     environment:
-      - PORT=5173
+      - PORT=3000
+      - WDS_SOCKET_PORT=5173
+      - WATCHPACK_POLLING=true
     depends_on:
       - backend
     volumes:
       - ./fica-frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+
