@@ -9,7 +9,8 @@ dependencies  = [
   "sqlalchemy",
   "python-dotenv",
   "psycopg2-binary",
-  "uvicorn[standard]"
+  "uvicorn[standard]",
+  "openpyxl"
 ]
 
 [build-system]
