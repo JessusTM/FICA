@@ -12,6 +12,8 @@ def clean_numeric(value):
 
 def insert_estudiantes(conn, df: pd.DataFrame) -> int:
     df_valid            = df.dropna(subset=["id_alumno", "año_ingreso", "tipo_ingreso"])
+    # Filtrar registros con id_alumno vacío (cadena vacía)
+    df_valid            = df_valid[df_valid["id_alumno"] != ""]
     estudiantes         = df_valid[["id_alumno", "año_ingreso", "tipo_ingreso"]].drop_duplicates()
     estudiantes_data    = []
     for _, row in estudiantes.iterrows():
@@ -156,6 +158,8 @@ def insert_asignaturas(conn, df: pd.DataFrame) -> int:
 def insert_paes(conn, df: pd.DataFrame) -> int:
     df_paes = df[df["tipo_ingreso"].str.upper() == "PAES"].copy()
     df_paes = df_paes.dropna(subset=["id_alumno", "año_ingreso"])
+    # Filtrar registros con id_alumno vacío
+    df_paes = df_paes[df_paes["id_alumno"] != ""]
 
     if len(df_paes) == 0 : return 0
 
@@ -216,6 +220,8 @@ def insert_paes(conn, df: pd.DataFrame) -> int:
 def insert_pdt(conn, df: pd.DataFrame) -> int:
     df_pdt = df[df["tipo_ingreso"].str.upper() == "PDT"].copy()
     df_pdt = df_pdt.dropna(subset=["id_alumno", "año_ingreso"])
+    # Filtrar registros con id_alumno vacío
+    df_pdt = df_pdt[df_pdt["id_alumno"] != ""]
 
     if len(df_pdt) == 0 : return 0
 
@@ -283,6 +289,8 @@ def insert_rendimiento_ramo(conn, df: pd.DataFrame) -> int:
             "nombre_asignatura",
         ]
     )
+    # Filtrar registros con id_alumno vacío
+    df_valid = df_valid[df_valid["id_alumno"] != ""]
 
     try:
         for _, row in df_valid.iterrows():

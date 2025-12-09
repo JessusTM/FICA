@@ -1,5 +1,5 @@
 from typing import Any, Dict, Tuple, Optional
-
+import numpy as np
 import pandas as pd
 from sqlalchemy.engine import Engine
 
@@ -9,6 +9,26 @@ from app.services.etl.group_by_student import group_by_student
 from app.services.etl.populate_database import populate_all
 from app.core.database.db import engine as default_engine, get_raw_connection
 from app.services.etl_state import etl_state_manager
+
+
+def convert_numpy_types(obj):
+    """
+    Recursively convert numpy types to native Python types for JSON serialization.
+    """
+    if isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif pd.isna(obj):
+        return None
+    else:
+        return obj
 
 def run_pipeline_on_dataframe(
     df          : pd.DataFrame,
@@ -49,6 +69,9 @@ def run_pipeline_on_dataframe(
             "group_by_student"     : summary_group_student,
             "database"             : summary_db,
         }
+
+        # Convert numpy types to native Python types for JSON serialization
+        summary = convert_numpy_types(summary)
 
         etl_state_manager.complete_process()
         return df3, summary

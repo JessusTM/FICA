@@ -10,7 +10,7 @@ HEADERS         = [
     "paes_nem","paes_ranking","paes_promedio_m1_comprension_lectora",
     "pdt_lenguaje","pdt_matematicas","pdt_historia","pdt_ciencias",
     "pdt_nem","pdt_ranking","pdt_promedio_matematicas_lenguaje",
-    "año_ingreso","tipo_ingreso","id_registro",
+    "año_ingreso","tipo_ingreso",
 ]
 
 def columnLetterToIndex(letter: str) -> int:
@@ -126,24 +126,55 @@ def orderByStudentId(dataWithIds: pd.DataFrame) -> pd.DataFrame:
 
 def prependStudentIdColumn(
     dataSorted: pd.DataFrame,                       
-    originalColumnCount: int) -> pd.DataFrame:
+    originalColumnCount: int,
+    paesRange: str,
+    pdtRange: str) -> pd.DataFrame:
     data = dataSorted.copy()
 
+    # Eliminar columnas temporales del procesamiento
     if "noScores" in data.columns:
         data = data.drop(columns=["noScores"])
     if "originalIndex" in data.columns:
         data = data.drop(columns=["originalIndex"])
+    if "group" in data.columns:
+        data = data.drop(columns=["group"])
 
     if "studentId" not in data.columns:
         data.insert(0, "studentId", dataSorted["studentId"])
-        return data
+    else:
+        columnOrder = ["studentId"]
+        for col in data.columns:
+            if col != "studentId":
+                columnOrder.append(col)
+        data = data[columnOrder]
 
-    columnOrder = ["studentId"]
-    for col in data.columns:
-        if col != "studentId":
-            columnOrder.append(col)
+    # Determinar tipo_ingreso basándose en los datos de PAES/PDT
+    paesStart, paesEnd = parseColumnRange(paesRange)
+    pdtStart, pdtEnd = parseColumnRange(pdtRange)
 
-    data = data[columnOrder]
+    tipo_ingreso_list = []
+    for _, row in data.iterrows():
+        # Verificar si hay datos en columnas PAES
+        paes_data = row.iloc[paesStart:paesEnd+1]
+        has_paes = False
+        if paes_data.notna().any():
+            has_paes = (paes_data.astype(str).str.strip() != "").any()
+
+        # Verificar si hay datos en columnas PDT
+        pdt_data = row.iloc[pdtStart:pdtEnd+1]
+        has_pdt = False
+        if pdt_data.notna().any():
+            has_pdt = (pdt_data.astype(str).str.strip() != "").any()
+
+        if has_paes:
+            tipo_ingreso_list.append("PAES")
+        elif has_pdt:
+            tipo_ingreso_list.append("PDT")
+        else:
+            tipo_ingreso_list.append("")
+
+    data["tipo_ingreso"] = tipo_ingreso_list
+
     return data
 
 def computeSimpleCounts(dataWithIds: pd.DataFrame) -> tuple[int, int, int, int]:
@@ -172,7 +203,7 @@ def group_by_student(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     dataWithIds             = assignStudentIds(dataRows, PAES_RANGE, PDT_RANGE)
     dataOrdered             = orderByStudentId(dataWithIds)
     originalColumnCount     = dataframe.shape[1]
-    dataForOutput           = prependStudentIdColumn(dataOrdered, originalColumnCount)
+    dataForOutput           = prependStudentIdColumn(dataOrdered, originalColumnCount, PAES_RANGE, PDT_RANGE)
     dataForOutput.columns   = HEADERS
 
     total, withScores, withoutScores, numStudents = computeSimpleCounts(dataWithIds)

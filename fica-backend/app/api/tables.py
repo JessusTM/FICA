@@ -1,0 +1,166 @@
+"""
+API Router para consultar tablas de la base de datos
+"""
+from fastapi import APIRouter, HTTPException, Query
+from typing import Optional
+import math
+
+from app.core.database.db import get_raw_connection
+
+router = APIRouter()
+
+# Lista de tablas disponibles para consulta
+AVAILABLE_TABLES = [
+    "estudiantes",
+    "semestres",
+    "bimestres",
+    "asignaturas",
+    "lineas",
+    "linea_asignaturas",
+    "rendimiento_ramo",
+    "paes",
+    "pdt",
+    "perfil_ingreso_academico_estudiante",
+    "carga_csv",
+]
+
+
+@router.get("/tables")
+async def get_tables():
+    """
+    Obtiene la lista de tablas disponibles en la base de datos
+    """
+    try:
+        with get_raw_connection() as conn:
+            cur = conn.cursor()
+
+            # Verificar qué tablas realmente existen
+            cur.execute("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                ORDER BY table_name;
+            """)
+
+            existing_tables = [row[0] for row in cur.fetchall()]
+            cur.close()
+
+            # Solo devolver tablas que existen y están en la lista permitida
+            tables = [t for t in AVAILABLE_TABLES if t in existing_tables]
+
+            return {
+                "tables": tables,
+                "total": len(tables)
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener tablas: {str(e)}")
+
+
+@router.get("/tables/{table_name}")
+async def get_table_data(
+    table_name: str,
+    page: int = Query(1, ge=1, description="Número de página"),
+    limit: int = Query(50, ge=1, le=100, description="Registros por página"),
+    search: Optional[str] = Query(None, description="Búsqueda en la tabla")
+):
+    """
+    Obtiene los datos de una tabla específica con paginación
+    """
+    # Validar que la tabla esté en la lista permitida (seguridad)
+    if table_name not in AVAILABLE_TABLES:
+        raise HTTPException(status_code=404, detail=f"Tabla '{table_name}' no encontrada")
+
+    try:
+        with get_raw_connection() as conn:
+            cur = conn.cursor()
+
+            # Verificar que la tabla existe
+            cur.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                    AND table_name = %s
+                );
+            """, (table_name,))
+
+            if not cur.fetchone()[0]:
+                cur.close()
+                raise HTTPException(status_code=404, detail=f"Tabla '{table_name}' no existe en la base de datos")
+
+            # Obtener nombres de columnas
+            cur.execute(f"""
+                SELECT column_name, data_type 
+                FROM information_schema.columns 
+                WHERE table_name = %s 
+                ORDER BY ordinal_position;
+            """, (table_name,))
+
+            columns_info = cur.fetchall()
+            columns = [col[0] for col in columns_info]
+
+            # Construir query con búsqueda (si se proporciona)
+            where_clause = ""
+            params = []
+
+            if search and search.strip():
+                # Buscar en todas las columnas de tipo texto
+                text_columns = [col[0] for col in columns_info if 'char' in col[1].lower() or 'text' in col[1].lower()]
+                if text_columns:
+                    search_conditions = [f"{col}::text ILIKE %s" for col in text_columns]
+                    where_clause = f"WHERE {' OR '.join(search_conditions)}"
+                    params = [f"%{search}%" for _ in text_columns]
+
+            # Contar total de registros
+            count_query = f"SELECT COUNT(*) FROM {table_name} {where_clause}"
+            cur.execute(count_query, params)
+            total_records = cur.fetchone()[0]
+
+            # Calcular paginación
+            offset = (page - 1) * limit
+            total_pages = math.ceil(total_records / limit) if total_records > 0 else 1
+
+            # Obtener datos paginados
+            data_query = f"""
+                SELECT * FROM {table_name} 
+                {where_clause}
+                ORDER BY 1
+                LIMIT %s OFFSET %s
+            """
+            cur.execute(data_query, params + [limit, offset])
+
+            rows = cur.fetchall()
+            cur.close()
+
+            # Convertir a lista de diccionarios
+            data = []
+            for row in rows:
+                row_dict = {}
+                for i, col in enumerate(columns):
+                    value = row[i]
+                    # Convertir tipos especiales a strings para JSON
+                    if value is not None:
+                        if hasattr(value, 'isoformat'):  # datetime
+                            row_dict[col] = value.isoformat()
+                        else:
+                            row_dict[col] = value
+                    else:
+                        row_dict[col] = None
+                data.append(row_dict)
+
+            return {
+                "table": table_name,
+                "columns": columns,
+                "data": data,
+                "page": page,
+                "limit": limit,
+                "totalRecords": total_records,
+                "totalPages": total_pages,
+                "hasNext": page < total_pages,
+                "hasPrev": page > 1
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al consultar tabla: {str(e)}")
+
