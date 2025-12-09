@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../config/api';
 
-function ETLStatus() {
+function ETLStatus({ shouldStartPolling }) {
   const [status, setStatus] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const etlSteps = [
     {
@@ -50,7 +51,7 @@ function ETLStatus() {
     };
 
     if (isPolling) {
-      interval = setInterval(fetchStatus, 2000); // Poll every 2 seconds
+      interval = setInterval(fetchStatus, 1000); // Poll every 1 second for smoother progress
       fetchStatus(); // Initial fetch
     }
 
@@ -58,6 +59,20 @@ function ETLStatus() {
       if (interval) clearInterval(interval);
     };
   }, [isPolling]);
+
+  // Start polling when shouldStartPolling becomes true
+  useEffect(() => {
+    if (shouldStartPolling && !hasStarted) {
+      setHasStarted(true);
+      setIsPolling(true);
+      // Set initial "running" status immediately
+      setStatus({
+        status: 'running',
+        currentStep: 1,
+        startTime: new Date().toISOString(),
+      });
+    }
+  }, [shouldStartPolling, hasStarted]);
 
   // Start polling when component mounts if ETL is running
   useEffect(() => {
@@ -80,11 +95,19 @@ function ETLStatus() {
   const getStepStatus = (stepId) => {
     if (!status) return 'pending';
 
+    // If ETL completed successfully, all steps are completed
+    if (status.status === 'completed') return 'completed';
+
+    // If current step is greater than this step, it's completed
     if (status.currentStep > stepId) return 'completed';
+
+    // If this is the current step
     if (status.currentStep === stepId) {
       if (status.status === 'failed') return 'failed';
       return 'running';
     }
+
+    // Otherwise it's pending
     return 'pending';
   };
 
@@ -103,8 +126,8 @@ function ETLStatus() {
     }
   };
 
-  if (!status || status.status === 'idle') {
-    return null; // Don't show if no ETL process has started
+  if (!shouldStartPolling && (!status || status.status === 'idle')) {
+    return null; // Don't show if ETL hasn't started
   }
 
   return (
@@ -135,14 +158,24 @@ function ETLStatus() {
         <div className="flex justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">Progreso</span>
           <span className="text-sm font-medium text-gray-700">
-            {Math.round(((status.currentStep - 1) / etlSteps.length) * 100)}%
+            {(() => {
+              if (status.status === 'completed') return '100';
+              const currentStep = Math.max(1, status.currentStep || 1);
+              return Math.round(((currentStep - 1) / etlSteps.length) * 100);
+            })()}%
           </span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+            className={`h-2 rounded-full transition-all duration-500 ${
+              status.status === 'completed' ? 'bg-green-600' : 'bg-blue-600'
+            }`}
             style={{
-              width: `${((status.currentStep - 1) / etlSteps.length) * 100}%`,
+              width: (() => {
+                if (status.status === 'completed') return '100%';
+                const currentStep = Math.max(1, status.currentStep || 1);
+                return `${((currentStep - 1) / etlSteps.length) * 100}%`;
+              })(),
             }}
           ></div>
         </div>

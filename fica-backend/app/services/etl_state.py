@@ -46,7 +46,7 @@ class ETLStateManager:
     def complete_process(self):
         """Mark ETL process as completed"""
         self._state["status"] = ETLStatus.COMPLETED
-        self._state["currentStep"] = 5
+        self._state["currentStep"] = 4  # Último paso (hay 4 pasos en total)
         self._state["endTime"] = datetime.now().isoformat()
 
     def fail_process(self, error_message: str):

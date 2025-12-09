@@ -25,6 +25,49 @@ AVAILABLE_TABLES = [
 ]
 
 
+@router.get("/database-status")
+async def get_database_status():
+    """
+    Verifica si la base de datos tiene datos.
+    Retorna información sobre si se puede ejecutar el ETL.
+    """
+    try:
+        with get_raw_connection() as conn:
+            cur = conn.cursor()
+
+            # Verificar si hay estudiantes (tabla principal)
+            cur.execute("SELECT COUNT(*) FROM estudiantes;")
+            student_count = cur.fetchone()[0]
+
+            # Verificar última carga
+            cur.execute("""
+                SELECT nombre_archivo, fecha_carga 
+                FROM carga_csv 
+                ORDER BY fecha_carga DESC 
+                LIMIT 1;
+            """)
+            last_upload = cur.fetchone()
+
+            cur.close()
+
+            has_data = student_count > 0
+
+            result = {
+                "hasData": has_data,
+                "canRunETL": not has_data,  # Solo se puede ejecutar si NO hay datos
+                "studentCount": student_count,
+                "lastUpload": {
+                    "filename": last_upload[0] if last_upload else None,
+                    "date": last_upload[1].isoformat() if last_upload else None,
+                } if last_upload else None,
+            }
+
+            return result
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al verificar estado de BD: {str(e)}")
+
+
 @router.get("/tables")
 async def get_tables():
     """

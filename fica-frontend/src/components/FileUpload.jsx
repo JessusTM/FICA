@@ -1,12 +1,50 @@
 import React, { useState, useRef } from 'react';
 import apiClient from '../config/api';
 
-function FileUpload() {
+function FileUpload({ onETLStart, isBlocked, blockReason }) {
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null); // 'uploading', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef(null);
+
+  // If blocked, show informative message
+  if (isBlocked) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-start space-x-4">
+          <div className="flex-shrink-0">
+            <svg
+              className="w-12 h-12 text-yellow-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <div className="flex-grow">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              ¡La base de datos ya contiene datos!
+            </h3>
+            <p className="text-gray-600 mb-3">
+              {blockReason || 'La base de datos ya contiene datos. No es necesario ejecutar el ETL nuevamente.'}
+            </p>
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+              <p className="text-sm text-blue-700">
+                💡 <strong>Sugerencia:</strong> Puedes explorar los datos existentes en la sección "Tablas".
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -66,6 +104,11 @@ function FileUpload() {
     try {
       setUploadStatus('uploading');
       setErrorMessage('');
+
+      // Notificar al padre que el ETL está iniciando
+      if (onETLStart) {
+        onETLStart();
+      }
 
       // Call the pipeline/run endpoint which processes the file and starts ETL
       const response = await apiClient.post('/pipeline/run', formData, {
@@ -177,7 +220,7 @@ function FileUpload() {
       )}
 
       {/* Action Buttons */}
-      {file && uploadStatus !== 'success' && (
+      {file && (
         <div className="mt-6">
           <button
             onClick={handleUpload}
@@ -185,25 +228,6 @@ function FileUpload() {
             className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {uploadStatus === 'uploading' ? 'Procesando archivo...' : 'Procesar archivo y ejecutar ETL'}
-          </button>
-        </div>
-      )}
-
-      {uploadStatus === 'success' && (
-        <div className="mt-6 space-y-4">
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-700 font-medium">
-              ✓ Proceso ETL completado exitosamente
-            </p>
-            <p className="text-green-600 text-sm mt-1">
-              Los datos han sido procesados y cargados a la base de datos.
-            </p>
-          </div>
-          <button
-            onClick={resetUpload}
-            className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-          >
-            Procesar otro archivo
           </button>
         </div>
       )}
