@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../config/api';
 
 function ETLStatus() {
   const [status, setStatus] = useState(null);
@@ -37,8 +37,7 @@ function ETLStatus() {
 
     const fetchStatus = async () => {
       try {
-        // Replace with your actual API endpoint
-        const response = await axios.get('/api/etl/status');
+        const response = await apiClient.get('/pipeline/status');
         setStatus(response.data);
 
         // Stop polling if ETL is completed or failed
@@ -64,7 +63,7 @@ function ETLStatus() {
   useEffect(() => {
     const checkInitialStatus = async () => {
       try {
-        const response = await axios.get('/api/etl/status');
+        const response = await apiClient.get('/pipeline/status');
         setStatus(response.data);
         if (response.data.status === 'running') {
           setIsPolling(true);

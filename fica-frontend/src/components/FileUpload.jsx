@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import axios from 'axios';
+import apiClient from '../config/api';
 
 function FileUpload() {
   const [file, setFile] = useState(null);
@@ -34,12 +34,12 @@ function FileUpload() {
   const validateAndSetFile = (file) => {
     if (!file) return;
 
-    // Validate file type
-    const validExtensions = ['.xlsx', '.xls'];
+    // Validate file type - accept CSV and Excel files
+    const validExtensions = ['.xlsx', '.xls', '.csv'];
     const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
 
     if (!validExtensions.includes(fileExtension)) {
-      setErrorMessage('Por favor, sube un archivo .xlsx o .xls');
+      setErrorMessage('Por favor, sube un archivo .xlsx, .xls o .csv');
       setFile(null);
       return;
     }
@@ -67,44 +67,26 @@ function FileUpload() {
       setUploadStatus('uploading');
       setErrorMessage('');
 
-      // Replace with your actual API endpoint
-      const response = await axios.post('/api/upload', formData, {
+      // Call the pipeline/run endpoint which processes the file and starts ETL
+      const response = await apiClient.post('/pipeline/run', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
       setUploadStatus('success');
-      console.log('Upload successful:', response.data);
+      console.log('ETL Process completed:', response.data);
     } catch (error) {
       setUploadStatus('error');
       setErrorMessage(
+        error.response?.data?.detail ||
         error.response?.data?.message ||
-        'Error al subir el archivo. Por favor, intenta de nuevo.'
+        'Error al procesar el archivo. Por favor, intenta de nuevo.'
       );
       console.error('Upload error:', error);
     }
   };
 
-  const handleStartETL = async () => {
-    try {
-      setUploadStatus('uploading');
-      setErrorMessage('');
-
-      // Replace with your actual API endpoint
-      const response = await axios.post('/api/etl/start');
-
-      setUploadStatus('success');
-      console.log('ETL started:', response.data);
-    } catch (error) {
-      setUploadStatus('error');
-      setErrorMessage(
-        error.response?.data?.message ||
-        'Error al iniciar el proceso ETL. Por favor, intenta de nuevo.'
-      );
-      console.error('ETL start error:', error);
-    }
-  };
 
   const resetUpload = () => {
     setFile(null);
@@ -133,7 +115,7 @@ function FileUpload() {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".xlsx,.xls"
+          accept=".xlsx,.xls,.csv"
           onChange={handleFileInput}
           className="hidden"
         />
@@ -154,7 +136,7 @@ function FileUpload() {
               o haz clic para seleccionar
             </p>
             <p className="text-xs text-gray-400">
-              Formatos soportados: .xlsx, .xls (máx. 50MB)
+              Formatos soportados: .xlsx, .xls, .csv (máx. 50MB)
             </p>
           </>
         ) : (
@@ -202,7 +184,7 @@ function FileUpload() {
             disabled={uploadStatus === 'uploading'}
             className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {uploadStatus === 'uploading' ? 'Subiendo...' : 'Subir archivo'}
+            {uploadStatus === 'uploading' ? 'Procesando archivo...' : 'Procesar archivo y ejecutar ETL'}
           </button>
         </div>
       )}
@@ -211,20 +193,17 @@ function FileUpload() {
         <div className="mt-6 space-y-4">
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-green-700 font-medium">
-              Archivo subido exitosamente
+              ✓ Proceso ETL completado exitosamente
+            </p>
+            <p className="text-green-600 text-sm mt-1">
+              Los datos han sido procesados y cargados a la base de datos.
             </p>
           </div>
-          <button
-            onClick={handleStartETL}
-            className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors"
-          >
-            Iniciar proceso ETL
-          </button>
           <button
             onClick={resetUpload}
             className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors"
           >
-            Subir otro archivo
+            Procesar otro archivo
           </button>
         </div>
       )}
