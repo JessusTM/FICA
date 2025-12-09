@@ -4,9 +4,15 @@ function SearchBar({ onSearch, placeholder = 'Buscar...' }) {
   const [searchInput, setSearchInput] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const debounceTimeout = useRef(null);
+  const previousSearch = useRef('');
 
   // Debounce search to avoid too many API calls
   useEffect(() => {
+    // Only trigger search if the value actually changed
+    if (searchInput === previousSearch.current) {
+      return;
+    }
+
     setIsSearching(true);
 
     if (debounceTimeout.current) {
@@ -15,6 +21,7 @@ function SearchBar({ onSearch, placeholder = 'Buscar...' }) {
 
     debounceTimeout.current = setTimeout(() => {
       onSearch(searchInput);
+      previousSearch.current = searchInput;
       setIsSearching(false);
     }, 500); // 500ms debounce
 

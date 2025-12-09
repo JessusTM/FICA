@@ -71,11 +71,25 @@ async def get_database_status():
 @router.get("/tables")
 async def get_tables():
     """
-    Obtiene la lista de tablas disponibles en la base de datos
+    Obtiene la lista de tablas disponibles en la base de datos.
+    Solo devuelve tablas que existen Y tienen datos.
     """
     try:
         with get_raw_connection() as conn:
             cur = conn.cursor()
+
+            # Verificar si la tabla principal (estudiantes) tiene datos
+            cur.execute("SELECT COUNT(*) FROM estudiantes;")
+            student_count = cur.fetchone()[0]
+
+            # Si no hay estudiantes, no devolver ninguna tabla
+            if student_count == 0:
+                cur.close()
+                return {
+                    "tables": [],
+                    "total": 0,
+                    "message": "Las tablas están vacías. Debes ejecutar el proceso ETL para cargar los datos."
+                }
 
             # Verificar qué tablas realmente existen
             cur.execute("""

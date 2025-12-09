@@ -140,6 +140,44 @@ function FileUpload({ onETLStart, isBlocked, blockReason }) {
     }
   };
 
+  // Si el ETL se completó exitosamente, mostrar mensaje y ocultar todo lo demás
+  if (uploadStatus === 'success') {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-start space-x-4">
+          <div className="flex-shrink-0">
+            <svg
+              className="w-12 h-12 text-green-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div className="flex-grow">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              ¡Proceso ETL completado exitosamente!
+            </h3>
+            <p className="text-gray-600 mb-3">
+              Los datos han sido procesados y cargados en la base de datos correctamente.
+            </p>
+            <div className="bg-green-50 border-l-4 border-green-500 p-4">
+              <p className="text-sm text-green-700">
+                ✓ <strong>Siguiente paso:</strong> Puedes explorar los datos en la sección "Tablas".
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
 
