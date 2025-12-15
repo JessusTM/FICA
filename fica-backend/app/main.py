@@ -1,23 +1,13 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import config
 from app.core.logging import setup_logging
 from app.api.pipeline import router as pipeline_router
-from app.api.tables import router as tables_router
+from app.api.kpi import router as kpi_router
 
 setup_logging()
 
 app = FastAPI()
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 app.include_router(
     pipeline_router,
@@ -25,9 +15,4 @@ app.include_router(
     tags=["pipeline"],
 )
 
-app.include_router(
-    tables_router,
-    prefix="/api",
-    tags=["tables"],
-)
-
+app.include_router(kpi_router)

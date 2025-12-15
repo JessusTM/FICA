@@ -7,3 +7,5 @@ __pycache__/
 .env
 .idea/
 fica-frontend/etl/
+
+fica_backend.egg-info/
