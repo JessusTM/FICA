@@ -18,6 +18,8 @@ def calculate_kpi_1_8(
     Returns:
         Dict con «value» (dict con Q1..Q5), «meta» (dict con detalles, etc.)
     """
+
+    # ------ Query: traer predictores + NotaB1 desde Gold (cohorte) ------
     query = text("""
         SELECT
             id_estudiante,
@@ -28,11 +30,13 @@ def calculate_kpi_1_8(
         WHERE cohorte = :cohorte
     """)
 
+    # ------ Ejecutar query y armar DataFrame ------
     result  = db.execute(query, {"cohorte": cohorte})
     df      = pd.DataFrame(result.fetchall(), columns=[
         "id_estudiante", "puntaje_ingreso", "diagnostico", "nota_b1"
     ])
 
+    # ------ Validación: sin datos para la cohorte ------
     if len(df) == 0:
         return {
             "value" : None,
@@ -43,31 +47,33 @@ def calculate_kpi_1_8(
             }
         }
 
+    # ------ Construir índice de ingreso (regla operacional) ------
     def calcular_indice_ingreso(row):
         puntaje_ingreso = row["puntaje_ingreso"]
         diagnostico     = row["diagnostico"]
 
         if pd.notna(puntaje_ingreso) and pd.notna(diagnostico):
-            indice_ingreso = (puntaje_ingreso + diagnostico) / 2.0
-            return indice_ingreso
+            return (puntaje_ingreso + diagnostico) / 2.0
         if pd.notna(puntaje_ingreso):
-            indice_ingreso = puntaje_ingreso
-            return indice_ingreso
+            return puntaje_ingreso
         if pd.notna(diagnostico):
-            indice_ingreso = diagnostico
-            return indice_ingreso
+            return diagnostico
         return None
 
-    df["indice_ingreso"]    = df.apply(calcular_indice_ingreso, axis=1)
-    df_validos              = df[
+    df["indice_ingreso"] = df.apply(calcular_indice_ingreso, axis=1)
+
+    # ------ Filtrar estudiantes válidos (índice + nota_b1) ------
+    df_validos = df[
         (df["indice_ingreso"].notna()) &
         (df["nota_b1"].notna())
     ].copy()
 
-    n_total         = int(len(df))
-    n_validos       = int(len(df_validos))
-    n_excluidos     = int(n_total - n_validos)
+    # ------ Conteos base (total, válidos, excluidos) ------
+    n_total     = int(len(df))
+    n_validos   = int(len(df_validos))
+    n_excluidos = int(n_total - n_validos)
 
+    # ------ Validación: mínimo de observaciones para quintiles ------
     if n_validos < 5:
         return {
             "value" : None,
@@ -80,6 +86,7 @@ def calculate_kpi_1_8(
             }
         }
 
+    # ------ Validación: suficientes valores distintos para 5 cortes ------
     cantidad_valores_distintos = int(df_validos["indice_ingreso"].nunique())
     if cantidad_valores_distintos < 5:
         return {
@@ -94,6 +101,7 @@ def calculate_kpi_1_8(
             }
         }
 
+    # ------ Construir quintiles (Q1..Q5) según el índice ------
     try:
         df_validos["quintil"] = pd.qcut(
             df_validos["indice_ingreso"],
@@ -112,17 +120,19 @@ def calculate_kpi_1_8(
             }
         }
 
+    # ------ Calcular tasa de reprobación (<4.0) por quintil + detalles ------
     tasas               = {}
     detalles_quintiles  = {}
 
     for quintil in ["Q1", "Q2", "Q3", "Q4", "Q5"]:
-        df_quintil      = df_validos[df_validos["quintil"] == quintil]
-        n_total_k       = int(len(df_quintil))
+        df_quintil  = df_validos[df_validos["quintil"] == quintil]
+        n_total_k   = int(len(df_quintil))
 
         if n_total_k > 0:
             n_reprobados_k  = int((df_quintil["nota_b1"] < 4.0).sum())
             tasa_k          = float((n_reprobados_k / n_total_k) * 100)
-            tasas[quintil]  = float(tasa_k)
+
+            tasas[quintil] = float(tasa_k)
             detalles_quintiles[quintil] = {
                 "n_total"           : n_total_k,
                 "n_reprobados"      : n_reprobados_k,
@@ -133,15 +143,16 @@ def calculate_kpi_1_8(
             tasas[quintil]              = None
             detalles_quintiles[quintil] = {"n_total": 0}
 
-    notes = []
-    notes.append(
+    # ------ Notas: decisiones operacionales y exclusiones ------
+    notes = [
         "El índice de ingreso se operacionaliza como promedio(PuntajeIngreso, Diagnóstico) si ambos existen; si no, usa el disponible."
-    )
+    ]
     if n_excluidos > 0:
         notes.append(
             f"{n_excluidos} estudiantes fueron excluidos por no tener índice de ingreso o NotaB1 disponible"
         )
 
+    # ------ Armar respuesta final del KPI ------
     result_kpi = {
         "value" : tasas,
         "meta"  : {

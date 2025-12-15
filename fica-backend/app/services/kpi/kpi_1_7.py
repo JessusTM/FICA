@@ -18,6 +18,8 @@ def calculate_kpi_1_7(
     Returns:
         Dict con «value» (dict con Q1..Q5), «meta» (dict con detalles, etc.)
     """
+
+    # ------ Query: traer predictores + NotaB1 desde Gold (cohorte) ------
     query = text("""
         SELECT
             id_estudiante,
@@ -28,11 +30,13 @@ def calculate_kpi_1_7(
         WHERE cohorte = :cohorte
     """)
 
+    # ------ Ejecutar query y armar DataFrame ------
     result  = db.execute(query, {"cohorte": cohorte})
     df      = pd.DataFrame(result.fetchall(), columns=[
         "id_estudiante", "puntaje_ingreso", "diagnostico", "nota_b1"
     ])
 
+    # ------ Validación: sin datos para la cohorte ------
     if len(df) == 0:
         return {
             "value" : None,
@@ -43,9 +47,10 @@ def calculate_kpi_1_7(
             }
         }
 
+    # ------ Construir índice de ingreso (regla operacional) ------
     def calcular_indice_ingreso(row):
         puntaje_ingreso = row["puntaje_ingreso"]
-        diagnostico = row["diagnostico"]
+        diagnostico     = row["diagnostico"]
 
         if pd.notna(puntaje_ingreso) and pd.notna(diagnostico):
             return (puntaje_ingreso + diagnostico) / 2.0
@@ -56,15 +61,19 @@ def calculate_kpi_1_7(
         return None
 
     df["indice_ingreso"] = df.apply(calcular_indice_ingreso, axis=1)
+
+    # ------ Filtrar estudiantes válidos (índice + nota_b1) ------
     df_validos = df[
         (df["indice_ingreso"].notna()) &
         (df["nota_b1"].notna())
     ].copy()
 
+    # ------ Conteos base (total, válidos, excluidos) ------
     n_total     = int(len(df))
     n_validos   = int(len(df_validos))
     n_excluidos = int(n_total - n_validos)
 
+    # ------ Validación: mínimo de observaciones para quintiles ------
     if n_validos < 5:
         return {
             "value": None,
@@ -77,6 +86,7 @@ def calculate_kpi_1_7(
             }
         }
 
+    # ------ Validación: suficientes valores distintos para 5 cortes ------
     valores_distintos = int(df_validos["indice_ingreso"].nunique())
     if valores_distintos < 5:
         return {
@@ -87,10 +97,11 @@ def calculate_kpi_1_7(
                 "n_validos"                 : n_validos,
                 "n_excluidos"               : n_excluidos,
                 "valores_distintos_indice"  : valores_distintos,
-                "error": "No hay suficientes valores distintos del índice para formar 5 quintiles"
+                "error"                     : "No hay suficientes valores distintos del índice para formar 5 quintiles"
             }
         }
 
+    # ------ Construir quintiles (Q1..Q5) según el índice ------
     try:
         df_validos["quintil"] = pd.qcut(
             df_validos["indice_ingreso"],
@@ -109,14 +120,15 @@ def calculate_kpi_1_7(
             }
         }
 
+    # ------ Calcular promedio NotaB1 por quintil + detalles ------
     promedios           = {}
     detalles_quintiles  = {}
 
     for quintil in ["Q1", "Q2", "Q3", "Q4", "Q5"]:
         df_q = df_validos[df_validos["quintil"] == quintil]
         if len(df_q) > 0:
-            mu                  = float(df_q["nota_b1"].mean())
-            promedios[quintil]  = mu
+            mu                      = float(df_q["nota_b1"].mean())
+            promedios[quintil]      = mu
             detalles_quintiles[quintil] = {
                 "n"         : int(len(df_q)),
                 "promedio"  : mu,
@@ -128,12 +140,16 @@ def calculate_kpi_1_7(
             promedios[quintil]          = None
             detalles_quintiles[quintil] = {"n": 0}
 
+    # ------ Notas: decisiones operacionales y exclusiones ------
     notes = [
         "El índice de ingreso se operacionaliza como promedio(PuntajeIngreso, Diagnóstico) si ambos existen; si no, usa el disponible."
     ]
     if n_excluidos > 0:
-        notes.append(f"{n_excluidos} estudiantes fueron excluidos por no tener índice de ingreso o NotaB1 disponible")
+        notes.append(
+            f"{n_excluidos} estudiantes fueron excluidos por no tener índice de ingreso o NotaB1 disponible"
+        )
 
+    # ------ Armar respuesta final del KPI ------
     return {
         "value" : promedios,
         "meta"  : {

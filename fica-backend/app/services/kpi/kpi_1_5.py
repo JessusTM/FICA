@@ -17,12 +17,15 @@ def calculate_kpi_1_5(
     Returns:
         Dict con «value» (float %), «meta» (dict con E, N_no_completan, N_completan)
     """
+
+    # ------ Query: total de estudiantes de la cohorte ------
     query_total_estudiantes = text("""
         SELECT COUNT(*) AS E
         FROM estudiantes
         WHERE anio_ingreso = :cohorte
     """)
 
+    # ------ Ejecutar query total y validar cohorte ------
     result_total_estudiantes = db.execute(query_total_estudiantes, {"cohorte": cohorte})
     row_total_estudiantes    = result_total_estudiantes.fetchone()
 
@@ -37,6 +40,7 @@ def calculate_kpi_1_5(
             }
         }
 
+    # ------ Query: contar quienes NO completan 8 ramos y cobertura en Gold ------
     query_no_completan = text("""
         SELECT
             COUNT(*) FILTER (WHERE total_ramos < 8) AS N_no_completan,
@@ -45,6 +49,7 @@ def calculate_kpi_1_5(
         WHERE cohorte = :cohorte
     """)
 
+    # ------ Ejecutar query de no completan y extraer métricas ------
     result_no_completan  = db.execute(query_no_completan, {"cohorte": cohorte})
     row_no_completan     = result_no_completan.fetchone()
 
@@ -54,15 +59,18 @@ def calculate_kpi_1_5(
         N_no_completan  = int(row_no_completan[0]) if row_no_completan[0] is not None else 0
         E_con_datos     = int(row_no_completan[1]) if row_no_completan[1] is not None else 0
 
+    # ------ Calcular totales derivados y tasa de deserción ------
     N_completan     = E - N_no_completan
     tasa_desercion  = float((N_no_completan / E) * 100) if E > 0 else 0.0
 
+    # ------ Notas de calidad de datos (cobertura Gold vs cohorte) ------
     notes = []
     if E_con_datos < E:
         notes.append(
             f"{E - E_con_datos} estudiantes no pudieron evaluarse en Gold (faltan registros para total_ramos)"
         )
 
+    # ------ Armar respuesta final del KPI ------
     result_kpi = {
         "value" : float(tasa_desercion),
         "meta"  : {
@@ -74,4 +82,4 @@ def calculate_kpi_1_5(
             "notes"          : notes if notes else None
         }
     }
-    return result_kpi 
+    return result_kpi

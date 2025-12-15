@@ -17,12 +17,15 @@ def calculate_kpi_1_4(
     Returns:
         Dict con «value» (int), «meta» (dict con E, detalles, etc.)
     """
+
+    # ------ Query: total de estudiantes de la cohorte ------
     query_total_estudiantes = text("""
         SELECT COUNT(*) AS E
         FROM estudiantes
         WHERE anio_ingreso = :cohorte
     """)
 
+    # ------ Ejecutar query total y validar cohorte ------
     result_total_estudiantes = db.execute(query_total_estudiantes, {"cohorte": cohorte})
     row_total_estudiantes    = result_total_estudiantes.fetchone()
 
@@ -37,6 +40,7 @@ def calculate_kpi_1_4(
             }
         }
 
+    # ------ Query: contar quienes aprueban_8 y cuántos tienen datos en Gold ------
     query_aprueba8 = text("""
         SELECT
             COUNT(*) FILTER (WHERE aprueba_8 = 1) AS Naprueban_8,
@@ -45,22 +49,27 @@ def calculate_kpi_1_4(
         WHERE cohorte = :cohorte
     """)
 
-    result_aprueba8     = db.execute(query_aprueba8, {"cohorte": cohorte})
-    row_aprueba8        = result_aprueba8.fetchone()
-    Naprueban_8         = 0
-    E_con_datos         = 0
-    if row_aprueba8:
-        Naprueban_8  = int(row_aprueba8[0]) if row_aprueba8[0] is not None else 0
-        E_con_datos  = int(row_aprueba8[1]) if row_aprueba8[1] is not None else 0
+    # ------ Ejecutar query de aprobación y extraer métricas ------
+    result_aprueba8 = db.execute(query_aprueba8, {"cohorte": cohorte})
+    row_aprueba8    = result_aprueba8.fetchone()
 
-    tasa_aprobacion     = float((Naprueban_8 / E) * 100) if E > 0 else 0.0
-    
-    notes= []
+    Naprueban_8 = 0
+    E_con_datos = 0
+    if row_aprueba8:
+        Naprueban_8 = int(row_aprueba8[0]) if row_aprueba8[0] is not None else 0
+        E_con_datos = int(row_aprueba8[1]) if row_aprueba8[1] is not None else 0
+
+    # ------ Calcular tasa de aprobación (referencia: total cohorte) ------
+    tasa_aprobacion = float((Naprueban_8 / E) * 100) if E > 0 else 0.0
+
+    # ------ Notas de calidad de datos (cobertura Gold vs cohorte) ------
+    notes = []
     if E_con_datos < E:
         notes.append(
             f"{E - E_con_datos} estudiantes no pudieron evaluarse en Gold (faltan registros para aprueba_8)"
         )
 
+    # ------ Armar respuesta final del KPI ------
     result_kpi = {
         "value" : Naprueban_8,
         "meta"  : {

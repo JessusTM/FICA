@@ -18,6 +18,8 @@ def calculate_kpi_1_1(
     Returns:
         Dict con «value» (float), «meta» (dict con E, desviaciones, etc.)
     """
+
+    # ------ Consulta base (cohorte + total_ramos desde Gold) ------
     query = text("""
         SELECT
             e.id_estudiante,
@@ -30,40 +32,46 @@ def calculate_kpi_1_1(
         ORDER BY e.id_estudiante
     """)
 
+    # ------ Ejecutar query y convertir a DataFrame ------
     result  = db.execute(query, {"cohorte": cohorte})
-    df      = pd.DataFrame(result.fetchall(), columns=['id_estudiante', 'total_ramos'])
+    df      = pd.DataFrame(result.fetchall(), columns=["id_estudiante", "total_ramos"])
 
+    # ------ Validación: cohorte sin datos ------
     if len(df) == 0:
         return {
             "value" : None,
             "meta"  : {
                 "cohorte"   : cohorte,
                 "E"         : 0,
-                "error"     : "No se encontraron estudiantes para la cohorte especificada"
-            }
+                "error"     : "No se encontraron estudiantes para la cohorte especificada",
+            },
         }
 
-    df['De']    = df['total_ramos'] - 8
-    E           = len(df)
-    D           = df['De'].mean()
+    # ------ Cálculo: desviación por estudiante vs ideal(8) ------
+    df["De"] = df["total_ramos"] - 8
 
+    # ------ Agregación: tamaño de cohorte y promedio de desviación ------
+    E = len(df)
+    D = df["De"].mean()
+
+    # ------ Salida: value + métricas resumen ------
     result_value = {
-        "value" : float(D),
-        "meta"  : {
+        "value": float(D),
+        "meta": {
             "cohorte"                       : cohorte,
             "E"                             : E,
             "desviacion_promedio"           : float(D),
             "desviaciones_por_estudiante"   : {
-                "min": float(df['De'].min()),
-                "max": float(df['De'].max()),
-                "std": float(df['De'].std())
+                "min": float(df["De"].min()),
+                "max": float(df["De"].max()),
+                "std": float(df["De"].std()),
             },
             "distribucion_ramos": {
-                "min"       : int(df['total_ramos'].min()),
-                "max"       : int(df['total_ramos'].max()),
-                "promedio"  : float(df['total_ramos'].mean()),
-                "mediana"   : float(df['total_ramos'].median())
-            }
-        }
+                "min"       : int(df["total_ramos"].min()),
+                "max"       : int(df["total_ramos"].max()),
+                "promedio"  : float(df["total_ramos"].mean()),
+                "mediana"   : float(df["total_ramos"].median()),
+            },
+        },
     }
     return result_value

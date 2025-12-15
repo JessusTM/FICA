@@ -18,6 +18,8 @@ def calculate_kpi_1_2_2(
     Returns:
         Dict con «value» (float), «meta» (dict con n, detalles, etc.)
     """
+    
+    # ------ Consulta a la base de datos para obtener los datos relevantes ------
     query = text("""
         SELECT
             g.id_estudiante,
@@ -35,6 +37,7 @@ def calculate_kpi_1_2_2(
         'id_estudiante', 'diagnostico', 'nota_b1'
     ])
 
+    # ------ Verificar si hay suficientes datos para calcular la correlación ------
     if len(df) < 2:
         return {
             "value" : None,
@@ -45,8 +48,10 @@ def calculate_kpi_1_2_2(
             }
         }
 
+    # ------ Calcular la correlación entre diagnóstico y nota_b1 ------
     r = df['diagnostico'].corr(df['nota_b1'])
 
+    # ------ Verificar si la correlación es válida (no es NaN) ------
     if pd.isna(r):
         return {
             "value" : None,
@@ -57,6 +62,7 @@ def calculate_kpi_1_2_2(
             }
         }
 
+    # ------ Estructurar el resultado con la información de la correlación y los detalles ------
     result_kpi = {
         "value" : float(r),
         "meta"  : {
@@ -76,4 +82,4 @@ def calculate_kpi_1_2_2(
             }
         }
     }
-    return result_kpi 
+    return result_kpi
