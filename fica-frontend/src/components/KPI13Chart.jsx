@@ -133,16 +133,6 @@ const KPI13Chart = ({ data }) => {
           </div>
         </div>
       )}
-      {result.meta?.notes && result.meta.notes.length > 0 && (
-        <div className="mt-4 bg-blue-50 p-4 rounded border border-blue-200">
-          <h4 className="font-semibold text-sm mb-2 text-blue-800">Información:</h4>
-          <ul className="text-sm text-blue-700 list-disc list-inside">
-            {result.meta.notes.map((note, idx) => (
-              <li key={idx}>{note}</li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 };
