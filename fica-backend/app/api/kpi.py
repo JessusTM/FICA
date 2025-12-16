@@ -26,6 +26,7 @@ def get_kpi(
         raise HTTPException(status_code=404, detail=f"KPI '{kpi_id}' no existe")
 
     try:
+        
         result = fn(db, cohorte)
         return {
             "kpi_id"    : kpi_id,

@@ -6,14 +6,14 @@ from contextlib import contextmanager
 engine = create_engine(config.DB_URL)
 
 SessionLocal = sessionmaker(
-    autocommit  = False,
-    autoflush   = False,
-    bind        = engine,
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
 )
 
 Base = declarative_base()
 
-def db_status():
+def get_db():
     db = SessionLocal()
     try:
         yield db

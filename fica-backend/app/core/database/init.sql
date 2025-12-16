@@ -1,6 +1,3 @@
-CREATE DATABASE fica;
-\c fica;
-
 CREATE TABLE estudiantes (
   id_estudiante   BIGINT PRIMARY KEY,
   anio_ingreso    INT NOT NULL,

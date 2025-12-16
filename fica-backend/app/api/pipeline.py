@@ -2,9 +2,25 @@ from io import BytesIO, StringIO
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.services.pipeline import run_pipeline_on_dataframe
 from app.services.etl_state import etl_state_manager
+from typing import Any
+import numpy as np
 import pandas as pd
 
 router = APIRouter()
+
+def json_safe(obj: Any) -> Any:
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, (np.floating,)):
+        val = float(obj)
+        return None if np.isnan(val) else val
+    if isinstance(obj, (np.bool_,)):
+        return bool(obj)
+    if isinstance(obj, dict):
+        return {str(k): json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple, set)):
+        return [json_safe(x) for x in obj]
+    return obj
 
 @router.post("/run")
 async def run_pipeline(file: UploadFile = File(...)):
@@ -28,9 +44,8 @@ async def run_pipeline(file: UploadFile = File(...)):
                 detail="Formato de archivo no soportado. Use .csv, .xlsx o .xls"
             )
 
-        # Run the pipeline
         _, summary = run_pipeline_on_dataframe(df_raw)
-        return summary
+        return json_safe(summary)
 
     except HTTPException:
         raise
