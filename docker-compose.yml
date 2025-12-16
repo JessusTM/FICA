@@ -1,15 +1,47 @@
 services:
+  database:
+    image: postgres:16
+    container_name: fica-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fica_user
+      POSTGRES_PASSWORD: fica_password
+      POSTGRES_DB: fica_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./fica-backend/app/core/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
   backend:
-    build: ./fica-backend 
+    build: ./fica-backend
+    container_name: fica-backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
+    environment:
+      DB_URL: postgresql+psycopg2://fica_user:fica_password@database:5432/fica_db
+    depends_on:
+      - database
     volumes:
       - ./fica-backend:/app
+
   frontend:
     build: ./fica-frontend
+    container_name: fica-frontend
+    restart: unless-stopped
     ports:
-      - "5173:5173"
-    volumes:
-      - ./fica-frontend:/app
+      - "5173:3000"
+    environment:
+      - PORT=3000
+      - WDS_SOCKET_PORT=5173
+      - WATCHPACK_POLLING=true
     depends_on:
       - backend
+    volumes:
+      - ./fica-frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+

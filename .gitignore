@@ -1,1 +1,11 @@
 .venv/
+build/
+
+__pycache__/
+*.pyc
+.dist/
+.env
+.idea/
+fica-frontend/etl/
+
+fica_backend.egg-info/

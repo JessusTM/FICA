@@ -1,0 +1,21 @@
+[project]
+name          = "fica-backend"
+version       = "0.1.0"
+dependencies  = [
+  "pydantic_settings",
+  "fastapi[standard]",
+  "numpy",
+  "pandas",
+  "sqlalchemy",
+  "python-dotenv",
+  "psycopg2-binary",
+  "uvicorn[standard]",
+  "openpyxl"
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
