@@ -48,6 +48,16 @@ function Navigation() {
             >
               Tablas
             </Link>
+            <Link
+              to="/kpi"
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                isActive('/kpi')
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              KPIs
+            </Link>
           </div>
         </div>
       </div>

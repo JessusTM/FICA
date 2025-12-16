@@ -4,6 +4,7 @@ import Navigation from './components/Navigation';
 import HomePage from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
 import TablesPage from './pages/TablesPage';
+import KPIPage from './pages/KPIPage';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/tables" element={<TablesPage />} />
+          <Route path="/kpi" element={<KPIPage />} />
         </Routes>
       </div>
     </Router>

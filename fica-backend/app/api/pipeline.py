@@ -3,10 +3,38 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.services.pipeline import run_pipeline_on_dataframe
 from app.services.etl_state import etl_state_manager
 from typing import Any
-import numpy as np
 import pandas as pd
+import numpy as np
 
 router = APIRouter()
+
+
+def convert_to_json_serializable(obj: Any) -> Any:
+    """
+    Convierte tipos numpy a tipos nativos de Python para serialización JSON.
+
+    Contexto:
+    - FastAPI/Pydantic no puede serializar directamente numpy.int64, numpy.float64, etc.
+
+    Para qué:
+    - Evitar errores de serialización cuando devolvemos summaries del pipeline.
+    """
+    if isinstance(obj, dict):
+        return {key: convert_to_json_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_to_json_serializable(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(convert_to_json_serializable(item) for item in obj)
+    elif isinstance(obj, (np.integer, np.int64, np.int32, np.int16, np.int8)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float64, np.float32, np.float16)):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif pd.isna(obj):
+        return None
+    else:
+        return obj
 
 def json_safe(obj: Any) -> Any:
     if isinstance(obj, (np.integer,)):
@@ -44,6 +72,7 @@ async def run_pipeline(file: UploadFile = File(...)):
                 detail="Formato de archivo no soportado. Use .csv, .xlsx o .xls"
             )
 
+        # Run the pipeline
         _, summary = run_pipeline_on_dataframe(df_raw)
         return json_safe(summary)
 

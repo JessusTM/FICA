@@ -15,13 +15,12 @@ AVAILABLE_TABLES = [
     "semestres",
     "bimestres",
     "asignaturas",
-    "lineas",
-    "linea_asignaturas",
     "rendimiento_ramo",
     "paes",
     "pdt",
-    "perfil_ingreso_academico_estudiante",
-    "carga_csv",
+    "gold_kpi_b1_student",
+    "gold_kpi_student_ramos",
+    "gold_kpi_student_aprueba8",
 ]
 
 
@@ -34,6 +33,26 @@ async def get_database_status():
     try:
         with get_raw_connection() as conn:
             cur = conn.cursor()
+
+            # Verificar si la tabla estudiantes existe
+            cur.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                    AND table_name = 'estudiantes'
+                );
+            """)
+            table_exists = cur.fetchone()[0]
+
+            if not table_exists:
+                # Si la tabla no existe, retornar estado inicial
+                cur.close()
+                return {
+                    "hasData": False,
+                    "canRunETL": True,
+                    "studentCount": 0,
+                    "lastUpload": None,
+                }
 
             # Verificar si hay estudiantes (tabla principal)
             cur.execute("SELECT COUNT(*) FROM estudiantes;")
@@ -77,6 +96,24 @@ async def get_tables():
     try:
         with get_raw_connection() as conn:
             cur = conn.cursor()
+
+            # Verificar si la tabla estudiantes existe
+            cur.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                    AND table_name = 'estudiantes'
+                );
+            """)
+            table_exists = cur.fetchone()[0]
+
+            if not table_exists:
+                cur.close()
+                return {
+                    "tables": [],
+                    "total": 0,
+                    "message": "Las tablas no existen. Debes ejecutar el proceso ETL para cargar los datos."
+                }
 
             # Verificar si la tabla principal (estudiantes) tiene datos
             cur.execute("SELECT COUNT(*) FROM estudiantes;")
@@ -198,6 +235,12 @@ async def get_table_data(
                     if value is not None:
                         if hasattr(value, 'isoformat'):  # datetime
                             row_dict[col] = value.isoformat()
+                        elif isinstance(value, float):
+                            # Handle non-JSON-compliant float values
+                            if math.isnan(value) or math.isinf(value):
+                                row_dict[col] = None
+                            else:
+                                row_dict[col] = value
                         else:
                             row_dict[col] = value
                     else:

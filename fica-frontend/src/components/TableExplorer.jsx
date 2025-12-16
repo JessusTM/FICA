@@ -24,16 +24,6 @@ const tableMetadata = {
     icon: '/lista-de-tablas.png',
     description: 'Información de cursos y módulos',
   },
-  lineas: {
-    name: 'Líneas',
-    icon: '/lista-de-tablas.png',
-    description: 'Líneas de estudio',
-  },
-  linea_asignaturas: {
-    name: 'Línea-Asignaturas',
-    icon: '/lista-de-tablas.png',
-    description: 'Relación entre líneas y asignaturas',
-  },
   rendimiento_ramo: {
     name: 'Rendimiento por ramo',
     icon: '/lista-de-tablas.png',
@@ -49,15 +39,20 @@ const tableMetadata = {
     icon: '/lista-de-tablas.png',
     description: 'Resultados de prueba PDT',
   },
-  perfil_ingreso_academico_estudiante: {
-    name: 'Perfil Académico',
-    icon: '/lista-de-tablas.png',
-    description: 'Perfil de ingreso académico de estudiantes',
+  gold_kpi_b1_student: {
+    name: 'KPI B1 - Estudiantes',
+    icon: '/base-de-datos.png',
+    description: 'Datos agregados para KPIs del primer bimestre',
   },
-  carga_csv: {
-    name: 'Carga CSV',
-    icon: '/lista-de-tablas.png',
-    description: 'Registro de cargas de archivos',
+  gold_kpi_student_ramos: {
+    name: 'KPI - Total Ramos',
+    icon: '/base-de-datos.png',
+    description: 'Total de ramos cursados por estudiante',
+  },
+  gold_kpi_student_aprueba8: {
+    name: 'KPI - Aprueba 8 Ramos',
+    icon: '/base-de-datos.png',
+    description: 'Indicador de estudiantes que aprueban 8+ ramos',
   },
 };
 

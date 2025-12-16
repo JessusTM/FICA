@@ -1,4 +1,7 @@
-CREATE TABLE estudiantes (
+-- Database is automatically created by Docker with name specified in POSTGRES_DB
+-- Tables are created in the default database (fica_db)
+
+CREATE TABLE IF NOT EXISTS estudiantes (
   id_estudiante   BIGINT PRIMARY KEY,
   anio_ingreso    INT NOT NULL,
   tipo_prueba     TEXT NOT NULL CHECK (tipo_prueba IN ('PAES', 'PDT')),
@@ -7,14 +10,14 @@ CREATE TABLE estudiantes (
   prueba_diagnostico_matematica NUMERIC(5,2)
 );
 
-CREATE TABLE semestres (
+CREATE TABLE IF NOT EXISTS semestres (
   id_semestre     BIGSERIAL PRIMARY KEY,
   anio            INT NOT NULL CHECK (anio BETWEEN 2000 AND 2100),
   numero          INT NOT NULL CHECK (numero IN (1,2)),
   UNIQUE (anio, numero)
 );
 
-CREATE TABLE bimestres (
+CREATE TABLE IF NOT EXISTS bimestres (
   id_bimestre     BIGSERIAL PRIMARY KEY,
   id_semestre     BIGINT NOT NULL,
   numero          INT NOT NULL CHECK (numero IN (1,2,3,4)),
@@ -22,7 +25,7 @@ CREATE TABLE bimestres (
   FOREIGN KEY (id_semestre) REFERENCES semestres(id_semestre) ON DELETE CASCADE
 );
 
-CREATE TABLE asignaturas (
+CREATE TABLE IF NOT EXISTS asignaturas (
   id_asignatura   BIGSERIAL PRIMARY KEY,
   codigo          TEXT NOT NULL,
   modulo          TEXT,
@@ -30,13 +33,13 @@ CREATE TABLE asignaturas (
   UNIQUE (codigo, modulo, nombre)
 );
 
-CREATE TABLE lineas (
+CREATE TABLE IF NOT EXISTS lineas (
   id_linea        BIGSERIAL PRIMARY KEY,
   nombre          TEXT NOT NULL UNIQUE,
   descripcion     TEXT
 );
 
-CREATE TABLE linea_asignaturas (
+CREATE TABLE IF NOT EXISTS linea_asignaturas (
   id_linea        BIGINT NOT NULL,
   id_asignatura   BIGINT NOT NULL,
   PRIMARY KEY (id_linea, id_asignatura),
@@ -44,7 +47,7 @@ CREATE TABLE linea_asignaturas (
   FOREIGN KEY (id_asignatura) REFERENCES asignaturas(id_asignatura) ON DELETE CASCADE
 );
 
-CREATE TABLE rendimiento_ramo (
+CREATE TABLE IF NOT EXISTS rendimiento_ramo (
   id_rendimiento  BIGSERIAL PRIMARY KEY,
   id_estudiante   BIGINT NOT NULL,
   id_bimestre     BIGINT NOT NULL,
@@ -58,7 +61,7 @@ CREATE TABLE rendimiento_ramo (
   FOREIGN KEY (id_asignatura) REFERENCES asignaturas(id_asignatura) ON DELETE RESTRICT
 );
 
-CREATE TABLE paes (
+CREATE TABLE IF NOT EXISTS paes (
   id_paes           BIGSERIAL PRIMARY KEY,
   id_estudiante     BIGINT NOT NULL,
   anio_examen       INT,
@@ -73,7 +76,7 @@ CREATE TABLE paes (
   FOREIGN KEY (id_estudiante) REFERENCES estudiantes(id_estudiante) ON DELETE CASCADE
 );
 
-CREATE TABLE pdt (
+CREATE TABLE IF NOT EXISTS pdt (
   id_pdt            BIGSERIAL PRIMARY KEY,
   id_estudiante     BIGINT NOT NULL,
   anio_examen       INT,
@@ -87,7 +90,7 @@ CREATE TABLE pdt (
   FOREIGN KEY (id_estudiante) REFERENCES estudiantes(id_estudiante) ON DELETE CASCADE
 );
 
-CREATE TABLE perfil_ingreso_academico_estudiante (
+CREATE TABLE IF NOT EXISTS perfil_ingreso_academico_estudiante (
   id_estudiante           BIGINT PRIMARY KEY,
   tipo_prueba             TEXT NOT NULL CHECK (tipo_prueba IN ('PAES', 'PDT')),
   anio_examen_relevante   INT,
@@ -96,13 +99,13 @@ CREATE TABLE perfil_ingreso_academico_estudiante (
   FOREIGN KEY (id_estudiante) REFERENCES estudiantes(id_estudiante) ON DELETE CASCADE
 );
 
-CREATE TABLE carga_csv (
+CREATE TABLE IF NOT EXISTS carga_csv (
   id_carga          BIGSERIAL PRIMARY KEY,
   nombre_archivo    TEXT NOT NULL,
   fecha_carga       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE gold_kpi_b1_student (
+CREATE TABLE IF NOT EXISTS gold_kpi_b1_student (
   cohorte         int     NOT NULL,
   id_estudiante   BIGINT  NOT NULL,
   tipo_prueba     text    NULL,
@@ -112,34 +115,34 @@ CREATE TABLE gold_kpi_b1_student (
   PRIMARY KEY (cohorte, id_estudiante)
 );
 
-CREATE INDEX idx_gold_kpi_b1_student_cohorte
+CREATE INDEX IF NOT EXISTS idx_gold_kpi_b1_student_cohorte
   ON gold_kpi_b1_student (cohorte);
 
-CREATE INDEX idx_gold_kpi_b1_student_cohorte_nota
+CREATE INDEX IF NOT EXISTS idx_gold_kpi_b1_student_cohorte_nota
   ON gold_kpi_b1_student (cohorte, nota_b1);
 
-CREATE TABLE gold_kpi_student_ramos (
+CREATE TABLE IF NOT EXISTS gold_kpi_student_ramos (
   cohorte       int     NOT NULL,
   id_estudiante BIGINT  NOT NULL,
   total_ramos   int     NOT NULL,
   PRIMARY KEY (cohorte, id_estudiante)
 );
 
-CREATE INDEX idx_gold_kpi_student_ramos_cohorte
+CREATE INDEX IF NOT EXISTS idx_gold_kpi_student_ramos_cohorte
   ON gold_kpi_student_ramos (cohorte);
 
-CREATE INDEX idx_gold_kpi_student_ramos_cohorte_total
+CREATE INDEX IF NOT EXISTS idx_gold_kpi_student_ramos_cohorte_total
   ON gold_kpi_student_ramos (cohorte, total_ramos);
 
-CREATE TABLE gold_kpi_student_aprueba8 (
+CREATE TABLE IF NOT EXISTS gold_kpi_student_aprueba8 (
   cohorte       int     NOT NULL,
   id_estudiante BIGINT  NOT NULL,
   aprueba_8     int     NOT NULL,
   PRIMARY KEY (cohorte, id_estudiante)
 );
 
-CREATE INDEX idx_gold_kpi_student_aprueba8_cohorte
+CREATE INDEX IF NOT EXISTS idx_gold_kpi_student_aprueba8_cohorte
   ON gold_kpi_student_aprueba8 (cohorte);
 
-CREATE INDEX idx_gold_kpi_student_aprueba8_cohorte_flag
+CREATE INDEX IF NOT EXISTS idx_gold_kpi_student_aprueba8_cohorte_flag
   ON gold_kpi_student_aprueba8 (cohorte, aprueba_8);

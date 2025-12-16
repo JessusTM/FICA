@@ -7,19 +7,29 @@ import pandas as pd
 # Helpers comunes
 def _replace_nan_with_none(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
-    Reemplaza NaN/NaT por None en un DataFrame.
+    Reemplaza NaN/NaT/Inf/-Inf por None en un DataFrame.
 
     Contexto:
     - Antes de insertar en PostgreSQL con psycopg2.
 
     Para qué:
-    - Pandas usa NaN, pero psycopg2 espera None para NULL.
+    - Pandas usa NaN/Inf, pero psycopg2 espera None para NULL.
+    - Los valores Inf/-Inf no son JSON compliant y causan errores.
 
     Dónde:
     - Usado por _dataframe_to_records() en este mismo archivo.
     """
+    import numpy as np
     dataframe_clean = dataframe.copy()
+
+    # Replace NaN and NaT with None
     dataframe_clean = dataframe_clean.where(pd.notna(dataframe_clean), None)
+
+    # Replace inf and -inf with None for numeric columns
+    numeric_cols = dataframe_clean.select_dtypes(include=[np.number]).columns
+    for col in numeric_cols:
+        dataframe_clean[col] = dataframe_clean[col].replace([np.inf, -np.inf], None)
+
     return dataframe_clean
 
 
