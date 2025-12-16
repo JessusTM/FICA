@@ -414,14 +414,16 @@ def evaluate_aprueba8_by_student(
 
         targets_bimestres = targets_por_cohorte.get(cohorte_int, set())
         if len(targets_bimestres) < 8:
-            filas_resultado.append((cohorte_int, estudiante_int, 0))
+            # No hay definición completa de 8 bimestres para esta cohorte: se marca como False.
+            filas_resultado.append((cohorte_int, estudiante_int, False))
             continue
 
         bimestres_presentes     = set(dataframe_estudiante["clave_bimestre"].drop_duplicates().tolist())
         estudiante_tiene_todos  = targets_bimestres.issubset(bimestres_presentes)
 
         if not estudiante_tiene_todos:
-            filas_resultado.append((cohorte_int, estudiante_int, 0))
+            # El estudiante no tiene registros en todos los bimestres objetivo: se marca como False.
+            filas_resultado.append((cohorte_int, estudiante_int, False))
             continue
 
         dataframe_target = dataframe_estudiante[
@@ -429,9 +431,9 @@ def evaluate_aprueba8_by_student(
         ].copy()
 
         nota_minima         = dataframe_target["nota_final_normalizada"].min()
-        indicador_aprueba_8 = 0
+        indicador_aprueba_8 = False
         if nota_minima is not None and nota_minima >= 4.0:
-            indicador_aprueba_8 = 1
+            indicador_aprueba_8 = True
 
         filas_resultado.append((cohorte_int, estudiante_int, indicador_aprueba_8))
 
@@ -440,5 +442,5 @@ def evaluate_aprueba8_by_student(
         columns=["cohorte", "id_estudiante", "aprueba_8"],
     )
 
-    dataframe_resultado["aprueba_8"] = dataframe_resultado["aprueba_8"].astype(int)
+    # La columna ya viene como booleano Python (True/False), compatible con PostgreSQL boolean.
     return dataframe_resultado

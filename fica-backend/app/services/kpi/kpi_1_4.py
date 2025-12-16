@@ -12,11 +12,25 @@ def calculate_kpi_1_4(
 
     Args:
         db      : Sesión de base de datos SQLAlchemy
-        cohorte : Año de ingreso de la cohorte (por defecto 2022)
+        cohorte : Año de ingreso de la cohorte (por defecto 2022). Este KPI solo
+                  está definido operacionalmente para la cohorte 2022, ya que el
+                  dataset actual (2022–2024) solo garantiza 8 bimestres completos
+                  para ese año de ingreso.
 
     Returns:
         Dict con «value» (int), «meta» (dict con E, detalles, etc.)
     """
+
+    # ------ Restricción operacional: solo cohorte 2022 ------
+    if cohorte != 2022:
+        return {
+            "value": None,
+            "meta": {
+                "cohorte"   : cohorte,
+                "E"         : 0,
+                "error"     : "KPI 1.4 solo está definido para la cohorte 2022 (dataset 2022–2024).",
+            },
+        }
 
     # ------ Query: total de estudiantes de la cohorte ------
     query_total_estudiantes = text("""
@@ -40,10 +54,10 @@ def calculate_kpi_1_4(
             }
         }
 
-    # ------ Query: contar quienes aprueban_8 y cuántos tienen datos en Gold ------
+    # ------ Query: contar quienes aprueban_8 (True) y cuántos tienen datos en Gold ------
     query_aprueba8 = text("""
         SELECT
-            COUNT(*) FILTER (WHERE aprueba_8 = 1) AS Naprueban_8,
+            COUNT(*) FILTER (WHERE aprueba_8 = TRUE) AS Naprueban_8,
             COUNT(*)                              AS E_con_datos
         FROM gold_kpi_student_aprueba8
         WHERE cohorte = :cohorte

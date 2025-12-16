@@ -1,6 +1,3 @@
--- Database is automatically created by Docker with name specified in POSTGRES_DB
--- Tables are created in the default database (fica_db)
-
 CREATE TABLE IF NOT EXISTS estudiantes (
   id_estudiante   BIGINT PRIMARY KEY,
   anio_ingreso    INT NOT NULL,
@@ -137,7 +134,7 @@ CREATE INDEX IF NOT EXISTS idx_gold_kpi_student_ramos_cohorte_total
 CREATE TABLE IF NOT EXISTS gold_kpi_student_aprueba8 (
   cohorte       int     NOT NULL,
   id_estudiante BIGINT  NOT NULL,
-  aprueba_8     int     NOT NULL,
+  aprueba_8     boolean NOT NULL,
   PRIMARY KEY (cohorte, id_estudiante)
 );
 
