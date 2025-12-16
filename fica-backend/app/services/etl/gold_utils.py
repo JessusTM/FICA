@@ -350,15 +350,15 @@ def add_bimestre_key_column(dataframe: pd.DataFrame) -> pd.DataFrame:
     return dataframe_copy
 
 
-def compute_first_8_bimestres_targets(dataframe: pd.DataFrame) -> Dict[int, Set[int]]:
+def compute_first_4_bimestres_targets(dataframe: pd.DataFrame) -> Dict[int, Set[int]]:
     """
-    Define cuáles son los 8 primeros bimestres de cada cohorte.
+    Define cuáles son los 4 primeros bimestres de cada cohorte.
 
     Qué hace:
     - Para cada cohorte:
       - toma bimestres únicos (semestre,bimestre)
       - ordena
-      - selecciona los primeros 8
+      - selecciona los primeros 4
       - los guarda como conjunto (set) de claves_bimestre
 
     Para qué:
@@ -379,8 +379,8 @@ def compute_first_8_bimestres_targets(dataframe: pd.DataFrame) -> Dict[int, Set[
             ["semestre_normalizado", "bimestre_normalizado"]
         )
 
-        lista_8_bimestres = dataframe_bimestres_ordenados["clave_bimestre"].head(8).tolist()
-        targets_por_cohorte[int(cohorte)] = set(lista_8_bimestres)
+        lista_4_bimestres = dataframe_bimestres_ordenados["clave_bimestre"].head(4).tolist()
+        targets_por_cohorte[int(cohorte)] = set(lista_4_bimestres)
 
     return targets_por_cohorte
 
@@ -394,14 +394,14 @@ def evaluate_aprueba8_by_student(
 
     Qué hace:
     - Para cada (cohorte, estudiante):
-      1) Verifica que existan 8 bimestres objetivo para esa cohorte
-      2) Verifica que el estudiante tenga registros en esos 8 bimestres
+      1) Verifica que existan 4 bimestres objetivo para esa cohorte
+      2) Verifica que el estudiante tenga registros en esos 4 bimestres
       3) Calcula la nota mínima en esos bimestres y exige >= 4.0
-      4) Retorna aprueba_8 = 1 o 0
+      4) Retorna aprueba_8 = True o False
 
     Para qué:
     - Materializar en Gold un indicador base para KPI 1.4
-      (“aprueban los 8 bimestres sin reprobar ramos”).
+      ("aprueban los 4 bimestres sin reprobar ramos").
 
     Dónde:
     - Consumido por build_gold_kpi_student_aprueba8 (tabla gold_kpi_student_aprueba8)
@@ -413,8 +413,8 @@ def evaluate_aprueba8_by_student(
         estudiante_int  = int(id_estudiante)
 
         targets_bimestres = targets_por_cohorte.get(cohorte_int, set())
-        if len(targets_bimestres) < 8:
-            # No hay definición completa de 8 bimestres para esta cohorte: se marca como False.
+        if len(targets_bimestres) < 4:
+            # No hay definición completa de 4 bimestres para esta cohorte: se marca como False.
             filas_resultado.append((cohorte_int, estudiante_int, False))
             continue
 

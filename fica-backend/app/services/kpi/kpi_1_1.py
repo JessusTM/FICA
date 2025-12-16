@@ -9,7 +9,7 @@ def calculate_kpi_1_1(
     cohorte : int = 2022
 ) -> Dict[str, Any]:
     """
-    KPI 1.1 - Desviación promedio de ramos cursados respecto al ideal (8)
+    KPI 1.1 - Desviación promedio de ramos cursados respecto al ideal (4)
 
     Args:
         db      : Sesión de base de datos SQLAlchemy
@@ -47,8 +47,8 @@ def calculate_kpi_1_1(
             },
         }
 
-    # ------ Cálculo: desviación por estudiante vs ideal(8) ------
-    df["De"] = df["total_ramos"] - 8
+    # ------ Cálculo: desviación por estudiante vs ideal(4) ------
+    df["De"] = df["total_ramos"] - 4
 
     # ------ Agregación: tamaño de cohorte y promedio de desviación ------
     E = len(df)

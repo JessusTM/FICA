@@ -14,7 +14,7 @@ from app.services.etl.gold_utils import (
     count_unique_ramos_by_student,
     normalize_columns_for_aprueba8,
     add_bimestre_key_column,
-    compute_first_8_bimestres_targets,
+    compute_first_4_bimestres_targets,
     evaluate_aprueba8_by_student,
 )
 
@@ -105,10 +105,10 @@ def build_gold_kpi_student_aprueba8(dataframe_silver_student_rows: pd.DataFrame)
     Contexto:
     - ETL Silver → Gold.
     - Se materializa un indicador binario por estudiante que resume si completó y aprobó
-      los 8 primeros bimestres definidos para su cohorte.
+      los 4 primeros bimestres definidos para su cohorte.
 
     Para qué:
-    - Soporta KPI 1.4 (estudiantes que aprueban los 8 bimestres sin reprobar ramos).
+    - Soporta KPI 1.4 (estudiantes que aprueban los 4 bimestres sin reprobar ramos).
 
     Dónde se usa:
     - Se invoca desde el pipeline ETL cuando se quiera generar/insertar la capa Gold.
@@ -117,8 +117,8 @@ def build_gold_kpi_student_aprueba8(dataframe_silver_student_rows: pd.DataFrame)
     dataframe_columnas_aprueba8     = normalize_columns_for_aprueba8(dataframe_silver_student_rows)
     dataframe_con_clave_bimestre    = add_bimestre_key_column(dataframe_columnas_aprueba8)
 
-    # ------ Targets 8 bimestres ------
-    targets_por_cohorte = compute_first_8_bimestres_targets(dataframe_con_clave_bimestre)
+    # ------ Targets 4 bimestres ------
+    targets_por_cohorte = compute_first_4_bimestres_targets(dataframe_con_clave_bimestre)
 
     # ------ Evaluación ------
     dataframe_resultado_aprueba8    = evaluate_aprueba8_by_student(

@@ -8,13 +8,13 @@ def calculate_kpi_1_4(
     cohorte : int = 2022
 ) -> Dict[str, Any]:
     """
-    KPI 1.4 - Estudiantes que aprueban los 8 bimestres sin reprobar ramos
+    KPI 1.4 - Estudiantes que aprueban los 4 bimestres sin reprobar ramos
 
     Args:
         db      : Sesión de base de datos SQLAlchemy
         cohorte : Año de ingreso de la cohorte (por defecto 2022). Este KPI solo
                   está definido operacionalmente para la cohorte 2022, ya que el
-                  dataset actual (2022–2024) solo garantiza 8 bimestres completos
+                  dataset actual (2022–2024) solo garantiza 4 bimestres completos
                   para ese año de ingreso.
 
     Returns:
